@@ -12,6 +12,11 @@ trait Rateable
         return $this->morphMany('willvincent\Rateable\Rating', 'rateable');
     }
 
+    public function userRatings()
+    {
+        return $this->ratings()->fromCurrentUser();
+    }
+
     public function averageRating()
     {
         return $this->ratings()->avg('rating');
@@ -24,12 +29,22 @@ trait Rateable
 
     public function userAverageRating()
     {
-        return $this->ratings()->where('user_id', \Auth::id())->avg('rating');
+        return $this->ratings()->fromCurrentUser()->avg('rating');
     }
 
     public function userSumRating()
     {
-        return $this->ratings()->where('user_id', \Auth::id())->sum('rating');
+        return $this->ratings()->fromCurrentUser()->sum('rating');
+    }
+
+    public function userHasRated()
+    {
+        return $this->ratings()->fromCurrentUser()->count() > 0;
+    }
+
+    public function userDeleteRatings()
+    {
+        return $this->ratings()->fromCurrentUser()->delete();
     }
 
     public function ratingPercent($max = 5)
@@ -59,4 +74,24 @@ trait Rateable
     {
         return $this->userSumRating();
     }
+
+    public function addRating($rating)
+    {
+        $rating = new willvincent\Rateable\Rating;
+        $rating->rating = (int) $rating;
+        $rating->user_id = \Auth::id();
+        $this->ratings()->save($rating);
+    }
+
+    public function updateRating($rating)
+    {
+        if ($this->userHasRated()) {
+            $this->userRatings()->first()->update(["rating" => $rating]);
+        } else {
+            $this->addRating($rating);
+        }
+
+
+    }
+
 }

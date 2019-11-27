@@ -34,4 +34,9 @@ class Rating extends Model
 
         return $this->belongsTo($userClassName);
     }
+
+    public function scopeFromCurrentUser($query) {
+        return $query->where("user_id",\Auth::id());
+    }
+
 }
